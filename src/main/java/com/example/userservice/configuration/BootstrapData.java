@@ -1,11 +1,15 @@
 package com.example.userservice.configuration;
 
+import com.example.userservice.model.User;
 import com.example.userservice.model.UserType;
+import com.example.userservice.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.Date;
+import java.util.Optional;
 
 @Component
 public class BootstrapData implements CommandLineRunner {
@@ -21,8 +25,25 @@ public class BootstrapData implements CommandLineRunner {
     private static final boolean admin_active = true;
     private static final boolean admin_loyal = true;
 
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public BootstrapData(UserRepository userRepository, PasswordEncoder passwordEncoder){
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @Override
     public void run(String... args) throws Exception {
 
+        // TODO encode pass ovde
+        User user = new User(admin_name,admin_lastname,admin_username,admin_password,admin_email,admin_birtday,admin_type,admin_verified,admin_active,admin_loyal);
+
+        Optional<User> adminUser = userRepository.findUserByEmail(admin_email);
+        if(adminUser.isEmpty()){
+            this.userRepository.save(user);
+
+        }
     }
 }
