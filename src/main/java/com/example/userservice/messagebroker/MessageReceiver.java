@@ -1,7 +1,10 @@
 package com.example.userservice.messagebroker;
 
+import com.example.userservice.dtos.AddMenagerRoomDto;
 import com.example.userservice.model.User;
 import com.example.userservice.repositories.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,22 @@ public class MessageReceiver {
         Optional<User> user = userRepository.findById(id);
         if(user.isPresent()){
             user.get().setVerified(true);
+            userRepository.save(user.get());
+        }
+    }
+
+    // todo vanja pogledaj
+    @JmsListener(destination = "user-service/addWorkplace")
+    public void receiveMessageVerify(String addMenagerRoomDtoJson) throws JsonProcessingException {
+        // Process the received message
+        System.out.println("Setujem sobu za : " + addMenagerRoomDtoJson);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        AddMenagerRoomDto addMenagerRoomDto = objectMapper.readValue(addMenagerRoomDtoJson, AddMenagerRoomDto.class);
+
+        Optional<User> user = userRepository.findById(addMenagerRoomDto.getManagerId());
+        if(user.isPresent()){
+            user.get().setWorkout_room_name(addMenagerRoomDto.getName());
             userRepository.save(user.get());
         }
     }

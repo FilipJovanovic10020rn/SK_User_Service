@@ -1,6 +1,8 @@
 package com.example.userservice.messagebroker;
 
 import com.example.userservice.dtos.NotifyUserDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
@@ -19,8 +21,12 @@ public class MessageSender {
 //    }
 
     // Ovo je sve za notifikaciju samo ce se menjati destination tamo
-    public void sendMessage(String destination, NotifyUserDto notifyUserDto) {
-        jmsTemplate.convertAndSend(destination, notifyUserDto);
+    public void sendMessage(String destination, NotifyUserDto notifyUserDto) throws JsonProcessingException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(notifyUserDto);
+
+        jmsTemplate.convertAndSend(destination, jsonString);
     }
 
     public void sendMessage(String destination, String encodedKey) {

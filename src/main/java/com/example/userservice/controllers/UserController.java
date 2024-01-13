@@ -5,6 +5,7 @@ import com.example.userservice.model.UserType;
 import com.example.userservice.security.CheckSecurity;
 import com.example.userservice.security.service.TokenService;
 import com.example.userservice.services.UserService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -29,11 +30,11 @@ public class UserController {
     }
 
     @PostMapping(value = "/register/manager", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> registerManager(@RequestBody RegisterManagerDto registerManagerDto){
+    public ResponseEntity<?> registerManager(@RequestBody RegisterManagerDto registerManagerDto) throws JsonProcessingException {
         return ResponseEntity.ok(userService.registerManager(registerManagerDto));
     }
     @PostMapping(value = "/register/client", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> registerClient(@RequestBody RegisterClientDto registerClientDto){
+    public ResponseEntity<?> registerClient(@RequestBody RegisterClientDto registerClientDto) throws JsonProcessingException {
         return ResponseEntity.ok(userService.registerClient(registerClientDto));
     }
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE )
@@ -43,7 +44,7 @@ public class UserController {
 
     @PostMapping(value = "/admin/createManager", consumes = MediaType.APPLICATION_JSON_VALUE)
     @CheckSecurity(roles = {UserType.ADMIN})
-    public ResponseEntity<?> createManager(@RequestHeader("Authorization") String authorization, @RequestBody CreateManagerDto createManagerDto){
+    public ResponseEntity<?> createManager(@RequestHeader("Authorization") String authorization, @RequestBody CreateManagerDto createManagerDto) throws JsonProcessingException {
         return ResponseEntity.ok(userService.create(createManagerDto,passwordEncoder));
     }
 
@@ -65,7 +66,7 @@ public class UserController {
 
     @PostMapping(value = "/admin/createClient", consumes = MediaType.APPLICATION_JSON_VALUE)
     @CheckSecurity(roles = {UserType.ADMIN})
-    public ResponseEntity<?> createClient(@RequestHeader("Authorization") String authorization, @RequestBody CreateClientDto createClientDto){
+    public ResponseEntity<?> createClient(@RequestHeader("Authorization") String authorization, @RequestBody CreateClientDto createClientDto) throws JsonProcessingException {
         return ResponseEntity.ok(userService.create(createClientDto,passwordEncoder));
     }
 
@@ -123,7 +124,7 @@ public class UserController {
 
     @PutMapping(value = "/editprofile", consumes = MediaType.APPLICATION_JSON_VALUE)
     @CheckSecurity(roles = {UserType.ADMIN, UserType.CLIENT, UserType.MANAGER})
-    public ResponseEntity<?> editSelf(@RequestHeader("Authorization") String authorization, @RequestBody EditClientDto editClientDto){
+    public ResponseEntity<?> editSelf(@RequestHeader("Authorization") String authorization, @RequestBody EditClientDto editClientDto) throws JsonProcessingException {
         return ResponseEntity.ok(userService.editSelf(authorization,editClientDto));
     }
     /*
@@ -138,7 +139,7 @@ public class UserController {
 
     @PutMapping(value = "/changepassword", consumes = MediaType.APPLICATION_JSON_VALUE)
     @CheckSecurity(roles = {UserType.MANAGER, UserType.CLIENT})
-    public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String authorization, @RequestBody ChangePasswordDto changePasswordDto){
+    public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String authorization, @RequestBody ChangePasswordDto changePasswordDto) throws JsonProcessingException {
         return ResponseEntity.ok(userService.changePassword(authorization,changePasswordDto));
     }
             /*

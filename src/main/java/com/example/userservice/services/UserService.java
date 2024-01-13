@@ -6,6 +6,7 @@ import com.example.userservice.model.User;
 import com.example.userservice.model.UserType;
 import com.example.userservice.repositories.UserRepository;
 import com.example.userservice.security.service.TokenService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ public class UserService {
     private final String routeNotifyVerify = "notify-service/verify";
     private final String routeNotifyPassword = "notify-service/password";
     private final String routeForSchedule = "schedule-service";
-
+    // todo svuda gde se salje poruka staviti save ispred slanja poruka jer se tada generise ID jebvem ti kuraaaaaac
     @Autowired
     public UserService(UserRepository userRepository, TokenService tokenService, MessageSender messageSender, PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
@@ -41,7 +42,7 @@ public class UserService {
 //        Long id = claims.get("id", Long.class);
 //        System.out.println(id);
 
-    public User registerManager(RegisterManagerDto registerManagerDto) {
+    public User registerManager(RegisterManagerDto registerManagerDto) throws JsonProcessingException {
 
         User u = new User(registerManagerDto,passwordEncoder);
 
@@ -59,7 +60,7 @@ public class UserService {
         return userRepository.save(u);
     }
 
-    public User registerClient(RegisterClientDto registerClientDto) {
+    public User registerClient(RegisterClientDto registerClientDto) throws JsonProcessingException {
 
         User u = new User(registerClientDto,passwordEncoder);
 
@@ -68,9 +69,13 @@ public class UserService {
         if(existing.isPresent()){
             throw new IllegalArgumentException("Postoji vec sa ovim usernamom");
         }
+        u = userRepository.save(u);
+//        System.out.println(u.toString());
         NotifyUserDto notifyUserDto = new NotifyUserDto();
         notifyUserDto.mapForClient(u);
+        System.out.println("ovo je on iz dto" +notifyUserDto.toString());
         // todo poslati mejl za verifikovanje
+
         messageSender.sendMessage(routeNotifyVerify, notifyUserDto);
 
         return userRepository.save(u);
@@ -100,7 +105,7 @@ public class UserService {
     }
 
     // create za clienta
-    public User create(CreateClientDto createClientDto, PasswordEncoder passwordEncoder){
+    public User create(CreateClientDto createClientDto, PasswordEncoder passwordEncoder) throws JsonProcessingException {
         User newUser = new User(createClientDto, passwordEncoder);
 
         Optional<User> u = userRepository.findUsersByUsernameEqualsIgnoreCase(newUser.getUsername());
@@ -117,7 +122,7 @@ public class UserService {
         return this.userRepository.save(newUser);
     }
     // create za managera
-    public User create(CreateManagerDto createManagerDto, PasswordEncoder passwordEncoder){
+    public User create(CreateManagerDto createManagerDto, PasswordEncoder passwordEncoder) throws JsonProcessingException {
         User newUser = new User(createManagerDto,passwordEncoder);
 
         Optional<User> u = userRepository.findUsersByUsernameEqualsIgnoreCase(newUser.getUsername());
@@ -215,7 +220,7 @@ public class UserService {
         return userRepository.save(u);
     }
 
-    public User editSelf(String token, EditClientDto editClientDto) {
+    public User editSelf(String token, EditClientDto editClientDto) throws JsonProcessingException {
 
         String[] tokens = token.split(" ");
         Claims claims = tokenService.parseToken(tokens[1]);
@@ -261,7 +266,7 @@ public class UserService {
         return userRepository.save(u);
     }
 
-    public User changePassword(String token, ChangePasswordDto changePasswordDto) {
+    public User changePassword(String token, ChangePasswordDto changePasswordDto) throws JsonProcessingException {
 
         String[] tokens = token.split(" ");
         Claims claims = tokenService.parseToken(tokens[1]);

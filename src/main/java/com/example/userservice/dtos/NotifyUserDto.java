@@ -3,9 +3,16 @@ package com.example.userservice.dtos;
 import com.example.userservice.model.User;
 import com.example.userservice.model.UserType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.Date;
 
+@Data
+@AllArgsConstructor
+@ToString
 public class NotifyUserDto {
 
     private Long id;
@@ -45,7 +52,7 @@ public class NotifyUserDto {
     }
 
     public void mapForClient(User user) {
-        this.id = user.getId();
+        this.id =               user.getId();
         this.first_name =       user.getFirst_name();
         this.last_name =        user.getLast_name();
         this.username =         user.getUsername();
