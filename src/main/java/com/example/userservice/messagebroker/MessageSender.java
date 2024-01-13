@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
+
 // Za slanje poruka
 @Service
 public class MessageSender {
@@ -19,5 +21,9 @@ public class MessageSender {
     // Ovo je sve za notifikaciju samo ce se menjati destination tamo
     public void sendMessage(String destination, NotifyUserDto notifyUserDto) {
         jmsTemplate.convertAndSend(destination, notifyUserDto);
+    }
+
+    public void sendMessage(String destination, String encodedKey) {
+        jmsTemplate.convertAndSend(destination,encodedKey);
     }
 }

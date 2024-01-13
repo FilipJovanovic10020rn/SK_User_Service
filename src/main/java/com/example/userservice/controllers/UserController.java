@@ -6,6 +6,7 @@ import com.example.userservice.security.CheckSecurity;
 import com.example.userservice.security.service.TokenService;
 import com.example.userservice.services.UserService;
 import io.jsonwebtoken.Claims;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +21,7 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
 
+    @Autowired
     public UserController(UserService userService, PasswordEncoder passwordEncoder, TokenService tokenService) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
