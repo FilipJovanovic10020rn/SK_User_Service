@@ -12,7 +12,6 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    // todo provaliti zasto ne radi bez ovoga a mozda i koga boli kurac
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http

@@ -53,7 +53,7 @@ public class UserService {
 
         NotifyUserDto notifyUserDto = new NotifyUserDto();
         notifyUserDto.mapForManager(u);
-        // todo poslati mejl za verifikovanje dodati na rutu da je za verifikaciju SVUDA OSIM NA CHANGE PASSWORD
+        // todo poslati mejl za verifikovanje dodati na rutu da je za verifikaciju
         messageSender.sendMessage(routeNotifyVerify, notifyUserDto);
 
         return userRepository.save(u);
@@ -280,7 +280,7 @@ public class UserService {
             }
         }
 
-        // todo odkomentarisati
+        // todo encode pass
 //        String oldEncoded = passwordEncoder.encode(changePasswordDto.getOld_password());
 //        if(oldEncoded.equals(u.getPassword())){
 //            String newEncoded = passwordEncoder.encode(changePasswordDto.getNew_password());
@@ -301,9 +301,7 @@ public class UserService {
         }else if(u.getUserType().equals(UserType.CLIENT)){
             notifyUserDto.mapForClient(u);
         }
-        // todo poslati mejl za verifikovanje
-//          dodati rutu da je promenena sifra
-
+        // todo poslati mejl za password promenu
           messageSender.sendMessage(routeNotifyPassword, notifyUserDto);
 
         return userRepository.save(u);
@@ -338,7 +336,7 @@ public class UserService {
         }
 //        u.setUsername(editUserDto.getUsername() != null && !editUserDto.getUsername().isEmpty() ? editUserDto.getUsername() : u.getUsername());
 
-        // todo ovo je sa encoderom
+        // todo encoderom pass
 //        u.setPassword(editUserDto.getPassword() != null && !editUserDto.getPassword().isEmpty() ?  passwordEncoder.encode(editUserDto.getPassword()) : u.getPassword());
         u.setPassword(editUserDto.getPassword() != null && !editUserDto.getPassword().isEmpty() ?  editUserDto.getPassword() : u.getPassword());
 
