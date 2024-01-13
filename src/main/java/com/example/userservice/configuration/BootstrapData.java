@@ -38,6 +38,8 @@ public class BootstrapData implements CommandLineRunner {
     public void run(String... args) throws Exception {
 
         // TODO encode pass ovde
+        String encodedPassword = passwordEncoder.encode(admin_password);
+//        User user = new User(admin_name,admin_lastname,admin_username,encodedPassword,admin_email,admin_birtday,admin_type,admin_verified,admin_active,admin_loyal);
         User user = new User(admin_name,admin_lastname,admin_username,admin_password,admin_email,admin_birtday,admin_type,admin_verified,admin_active,admin_loyal);
 
         Optional<User> adminUser = userRepository.findUserByEmail(admin_email);

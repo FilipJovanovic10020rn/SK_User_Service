@@ -11,7 +11,9 @@ import javax.crypto.SecretKey;
 @Service
 public class TokenService {
 
-    private final SecretKey jwtSecretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+//    private final SecretKey jwtSecretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    private final String sharedSecretKey = "tokenKey";
+    private final SecretKey jwtSecretKey = Keys.hmacShaKeyFor(sharedSecretKey.getBytes());
 
     public String generate(Claims claims) {
         return Jwts.builder()

@@ -39,11 +39,32 @@ public class UserController {
         return ResponseEntity.ok(userService.login(loginDto));
     }
 
-    // todo ne radi zbog mrtvog CreateUserDto promeniti to debilno sranje
-    @PostMapping(value = "/admin/create", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/admin/createManager", consumes = MediaType.APPLICATION_JSON_VALUE)
     @CheckSecurity(roles = {UserType.ADMIN})
-    public ResponseEntity<?> createUser(@RequestHeader("Authorization") String authorization, @RequestBody CreateUserDto createUserDto){
-        return ResponseEntity.ok(userService.create(createUserDto,passwordEncoder));
+    public ResponseEntity<?> createManager(@RequestHeader("Authorization") String authorization, @RequestBody CreateManagerDto createManagerDto){
+        return ResponseEntity.ok(userService.create(createManagerDto,passwordEncoder));
+    }
+
+    /*
+    {
+        "first_name": "zadnjiM",
+        "last_name": "test",
+        "username": "zadnjiM",
+        "password": "123",
+        "email": "3test.com",
+        "birthday": "2024-01-10T19:49:29.000+00:00",
+        "userType": "MANAGER",
+        "workout_room_name": "sala1",
+        "date_of_employment": "2024-01-10T19:49:29.000+00:00",
+        "verified": true,
+        "active": true
+    }
+     */
+
+    @PostMapping(value = "/admin/createClient", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @CheckSecurity(roles = {UserType.ADMIN})
+    public ResponseEntity<?> createClient(@RequestHeader("Authorization") String authorization, @RequestBody CreateClientDto createClientDto){
+        return ResponseEntity.ok(userService.create(createClientDto,passwordEncoder));
     }
 
     /*
@@ -59,23 +80,11 @@ public class UserController {
         "verified": true,
         "active": true,
         "loyalty": false
-
-        "first_name": "zadnjiM",
-        "last_name": "test",
-        "username": "zadnjiM",
-        "password": "123",
-        "email": "3test.com",
-        "birthday": "2024-01-10T19:49:29.000+00:00",
-        "userType": "MANAGER",
-        "workout_room_name": "sala1",
-        "date_of_employment": "2024-01-10T19:49:29.000+00:00",
-        "verified": true,
-        "active": true
     }
      */
 
     @GetMapping(value = "/get", produces = MediaType.APPLICATION_JSON_VALUE)
-    @CheckSecurity(roles = {UserType.ADMIN, UserType.MANAGER})
+    @CheckSecurity(roles = {UserType.ADMIN, UserType.MANAGER, UserType.CLIENT})
     public ResponseEntity<?> getAllUsers(@RequestHeader("Authorization") String authorization){
         return  ResponseEntity.ok(userService.findAll(authorization));
     }
@@ -161,6 +170,11 @@ public class UserController {
     @CheckSecurity(roles = {UserType.ADMIN})
     public ResponseEntity<?> deleteUser(@RequestHeader("Authorization") String authorization, @PathVariable("id") Long id){
         return ResponseEntity.ok(userService.deteleUser(authorization,id));
+    }
+
+    @GetMapping(value = "/get-workout-count/{id}")
+    public ResponseEntity<?> getWorkoutCount(@PathVariable("id") Long id){
+        return ResponseEntity.ok(userService.getWorkoutCount(id));
     }
 
 }

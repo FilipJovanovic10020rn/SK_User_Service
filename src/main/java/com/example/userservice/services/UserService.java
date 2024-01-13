@@ -1,6 +1,7 @@
 package com.example.userservice.services;
 
 import com.example.userservice.dtos.*;
+import com.example.userservice.messagebroker.MessageSender;
 import com.example.userservice.model.User;
 import com.example.userservice.model.UserType;
 import com.example.userservice.repositories.UserRepository;
@@ -9,24 +10,28 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 @Service
 public class UserService {
-    private UserRepository userRepository;
-    private TokenService tokenService;
+    private final UserRepository userRepository;
+    private final TokenService tokenService;
+    private final MessageSender messageSender;
+    private final PasswordEncoder passwordEncoder;
 
-    private PasswordEncoder passwordEncoder;
+    private final String routeNotifyVerify = "notify-service/verify";
+    private final String routeNotifyPassword = "notify-service/password";
+    private final String routeForSchedule = "schedule-service";
+
     @Autowired
-    public UserService(UserRepository userRepository, TokenService tokenService, PasswordEncoder passwordEncoder){
+    public UserService(UserRepository userRepository, TokenService tokenService, MessageSender messageSender, PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
         this.tokenService = tokenService;
+        this.messageSender = messageSender;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -45,7 +50,11 @@ public class UserService {
         if(existing.isPresent()){
             throw new IllegalArgumentException("Postoji vec sa ovim usernamom");
         }
-        // todo poslati mejl za verifikovanje
+
+        NotifyUserDto notifyUserDto = new NotifyUserDto();
+        notifyUserDto.mapForManager(u);
+        // todo poslati mejl za verifikovanje dodati na rutu da je za verifikaciju SVUDA OSIM NA CHANGE PASSWORD
+        messageSender.sendMessage(routeNotifyVerify, notifyUserDto);
 
         return userRepository.save(u);
     }
@@ -59,13 +68,18 @@ public class UserService {
         if(existing.isPresent()){
             throw new IllegalArgumentException("Postoji vec sa ovim usernamom");
         }
-        // todo posalti imeal verify
+        NotifyUserDto notifyUserDto = new NotifyUserDto();
+        notifyUserDto.mapForClient(u);
+        // todo poslati mejl za verifikovanje
+        messageSender.sendMessage(routeNotifyVerify, notifyUserDto);
 
         return userRepository.save(u);
     }
 
     public TokenResponseDto login(LoginDto loginDto) {
         // todo encode pass
+        String encodedPass = passwordEncoder.encode(loginDto.getPassword());
+//        Optional<User> optionalUser = userRepository.findUserByUsernameAndPassword(loginDto.getUsername(), encodedPass);
         Optional<User> optionalUser = userRepository.findUserByUsernameAndPassword(loginDto.getUsername(), loginDto.getPassword());
         if(optionalUser.isPresent()){
 
@@ -85,27 +99,37 @@ public class UserService {
         throw new RuntimeException("No such user / pogresni kredenicijali");
     }
 
-    // todo svuda ubaciti active koji su za klienta i managera jer moze da bude deaktriviran
-    public User create(CreateUserDto createUserDto, PasswordEncoder passwordEncoder){
-
-        User newUser;
-
-        if(createUserDto instanceof CreateManagerDto){
-            CreateManagerDto createManagerDto = (CreateManagerDto) createUserDto;
-            newUser = new User(createManagerDto,passwordEncoder);
-        }
-
-        else{
-            CreateClientDto createClientDto = (CreateClientDto) createUserDto;
-            newUser = new User(createClientDto, passwordEncoder);
-        }
-
+    // create za clienta
+    public User create(CreateClientDto createClientDto, PasswordEncoder passwordEncoder){
+        User newUser = new User(createClientDto, passwordEncoder);
 
         Optional<User> u = userRepository.findUsersByUsernameEqualsIgnoreCase(newUser.getUsername());
         if(u.isPresent()){
             throw new IllegalArgumentException("Postoji vec neko sa tim usernamemom");
         }
-        // TODO POSLATI MEJL
+
+        NotifyUserDto notifyUserDto = new NotifyUserDto();
+        notifyUserDto.mapForClient(newUser);
+        // todo poslati mejl za verifikovanje
+        messageSender.sendMessage(routeNotifyVerify, notifyUserDto);
+
+
+        return this.userRepository.save(newUser);
+    }
+    // create za managera
+    public User create(CreateManagerDto createManagerDto, PasswordEncoder passwordEncoder){
+        User newUser = new User(createManagerDto,passwordEncoder);
+
+        Optional<User> u = userRepository.findUsersByUsernameEqualsIgnoreCase(newUser.getUsername());
+        if(u.isPresent()){
+            throw new IllegalArgumentException("Postoji vec neko sa tim usernamemom");
+        }
+
+        NotifyUserDto notifyUserDto = new NotifyUserDto();
+        notifyUserDto.mapForManager(newUser);
+        // todo poslati mejl za verifikovanje
+        messageSender.sendMessage(routeNotifyVerify, notifyUserDto);
+
         return this.userRepository.save(newUser);
     }
 
@@ -120,10 +144,10 @@ public class UserService {
         if (userTypeToken.equals(UserType.ADMIN)){
             return userRepository.findAll();
         }
-        return userRepository.findUsersByUserTypeEquals(UserType.CLIENT);
-
-        // todo mozda dodati da client moze da dovuce sve managere??
-
+        else if(userTypeToken.equals(UserType.MANAGER)) {
+            return userRepository.findUsersByUserTypeEquals(UserType.CLIENT);
+        }
+        return userRepository.findUsersByUserTypeEquals(UserType.MANAGER);
     }
 
     public User getById(String token, Long id) {
@@ -218,7 +242,18 @@ public class UserService {
                 u.setEmail(editClientDto.getEmail());
                 u.setVerified(false);
 
-                // todo posslati notifikaciju
+                if(u.getUserType().equals(UserType.ADMIN)){
+                    return userRepository.save(u);
+                }
+
+                NotifyUserDto notifyUserDto = new NotifyUserDto();
+                if(u.getUserType().equals(UserType.MANAGER)){
+                    notifyUserDto.mapForManager(u);
+                }else if(u.getUserType().equals(UserType.CLIENT)){
+                    notifyUserDto.mapForClient(u);
+                }
+                // todo poslati mejl za verifikovanje
+              messageSender.sendMessage(routeNotifyVerify, notifyUserDto);
 
             }
         }
@@ -226,7 +261,6 @@ public class UserService {
         return userRepository.save(u);
     }
 
-    // todo dodati ovde encoder i dekoder
     public User changePassword(String token, ChangePasswordDto changePasswordDto) {
 
         String[] tokens = token.split(" ");
@@ -246,12 +280,31 @@ public class UserService {
             }
         }
 
+        // todo odkomentarisati
+//        String oldEncoded = passwordEncoder.encode(changePasswordDto.getOld_password());
+//        if(oldEncoded.equals(u.getPassword())){
+//            String newEncoded = passwordEncoder.encode(changePasswordDto.getNew_password());
+//            u.setPassword(newEncoded);
+//        }
+//        else{
+//            throw new RuntimeException("nije dobra stara sifra");
+//        }
+
         if(changePasswordDto.getOld_password().equals(u.getPassword()))
             u.setPassword(changePasswordDto.getNew_password());
         else{
             throw new RuntimeException("nije dobra stara sifra");
         }
-        //todo ovde poslati email
+        NotifyUserDto notifyUserDto = new NotifyUserDto();
+        if(u.getUserType().equals(UserType.MANAGER)){
+            notifyUserDto.mapForManager(u);
+        }else if(u.getUserType().equals(UserType.CLIENT)){
+            notifyUserDto.mapForClient(u);
+        }
+        // todo poslati mejl za verifikovanje
+//          dodati rutu da je promenena sifra
+
+          messageSender.sendMessage(routeNotifyPassword, notifyUserDto);
 
         return userRepository.save(u);
     }
@@ -289,9 +342,6 @@ public class UserService {
 //        u.setPassword(editUserDto.getPassword() != null && !editUserDto.getPassword().isEmpty() ?  passwordEncoder.encode(editUserDto.getPassword()) : u.getPassword());
         u.setPassword(editUserDto.getPassword() != null && !editUserDto.getPassword().isEmpty() ?  editUserDto.getPassword() : u.getPassword());
 
-        // todo ovde poslati notifikaciju korisniku da je promenjena sifra u sifru X
-
-//        sendMail(u.getEmail());
 
         return userRepository.save(u);
     }
@@ -312,6 +362,11 @@ public class UserService {
     }
 
 
-
-
+    public int getWorkoutCount(Long id) {
+        Optional<User> user = userRepository.findById(id);
+        if(user.isPresent()){
+            return user.get().getWorkout_count();
+        }
+        throw new RuntimeException("No such user");
+    }
 }
