@@ -368,8 +368,26 @@ public class UserService {
     public int getWorkoutCount(Long id) {
         Optional<User> user = userRepository.findById(id);
         if(user.isPresent()){
-            return user.get().getWorkout_count();
+            int count = user.get().getWorkout_count();
+            if(user.get().getWorkout_count()>=10){
+                user.get().setWorkout_count(0);
+                userRepository.save(user.get());
+            }
+            return count;
         }
         throw new RuntimeException("No such user");
+    }
+
+    public EmailsDTO getEmails(NotifyServiceBookDTO notifyServiceBookDTO) {
+        Optional<User> client = userRepository.findById(notifyServiceBookDTO.getCilentID());
+        Optional<User> manager = userRepository.findById(notifyServiceBookDTO.getManagerID());
+
+        EmailsDTO emailsDTO = new EmailsDTO();
+        if(client.isPresent())
+            emailsDTO.setClientEmail(client.get().getEmail());
+        if(manager.isPresent())
+            emailsDTO.setManagerEmail(manager.get().getEmail());
+
+        return emailsDTO;
     }
 }

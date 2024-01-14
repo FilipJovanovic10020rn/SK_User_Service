@@ -177,7 +177,23 @@ public class UserController {
 
     @GetMapping(value = "/get-workout-count/{id}")
     public ResponseEntity<?> getWorkoutCount(@PathVariable("id") Long id){
+
         return ResponseEntity.ok(userService.getWorkoutCount(id));
+    }
+
+//    @GetMapping(value = "/get-emails",  consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+//    public ResponseEntity<?> getEmails( @RequestBody String notifyServiceBookDTO){
+//
+//        System.out.println(notifyServiceBookDTO);
+//
+//        return ResponseEntity.ok(userService.getWorkoutCount(1L));
+//    }
+
+    @PostMapping(value = "/get-emails", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getEmails(@RequestBody NotifyServiceBookDTO notifyServiceBookDTO) {
+        System.out.println(notifyServiceBookDTO.toString());
+
+        return ResponseEntity.ok(userService.getEmails(notifyServiceBookDTO));
     }
 
 }

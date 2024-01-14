@@ -51,7 +51,7 @@ public class MessageReceiver {
         }
     }
 
-    @JmsListener(destination = "user-service/addWorkout")
+    @JmsListener(destination = "user-service/book")
     public void receiveMessageAddWorkout(Long id) {
         // Process the received message
         System.out.println("dodajem workout za: " + id);
@@ -60,10 +60,13 @@ public class MessageReceiver {
         if(user.isPresent()){
             user.get().setWorkout_count(user.get().getWorkout_count()+1);
             userRepository.save(user.get());
+
         }
+
+
     }
 
-    @JmsListener(destination = "user-service/removeWorkout")
+    @JmsListener(destination = "user-service/cancel")
     public void receiveMessageRemoveWorkout(Long id) {
         // Process the received message
         System.out.println("oduzimam workout za: " + id);
