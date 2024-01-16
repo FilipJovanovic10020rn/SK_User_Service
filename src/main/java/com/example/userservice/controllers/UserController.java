@@ -197,6 +197,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/get-role")
+    @CheckSecurity(roles = {UserType.ADMIN,UserType.MANAGER,UserType.CLIENT})
     public ResponseEntity<?> getRole(@RequestHeader("Authorization") String authorization){
         String[] tokens = authorization.split(" ");
         Claims claims = tokenService.parseToken(tokens[1]);
