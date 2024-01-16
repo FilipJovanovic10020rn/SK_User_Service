@@ -196,4 +196,14 @@ public class UserController {
         return ResponseEntity.ok(userService.getEmails(notifyServiceBookDTO));
     }
 
+    @GetMapping(value = "/get-role")
+    public ResponseEntity<?> getRole(@RequestHeader("Authorization") String authorization){
+        String[] tokens = authorization.split(" ");
+        Claims claims = tokenService.parseToken(tokens[1]);
+        Long idFromToken = claims.get("id", Long.class);
+        UserType userTypeToken = UserType.fromString(claims.get("role", String.class));
+
+        return ResponseEntity.ok(userTypeToken.toString());
+    }
+
 }
